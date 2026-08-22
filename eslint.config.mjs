@@ -1,8 +1,9 @@
+import { defineConfig } from 'eslint/config';
 import eslint from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
     eslint.configs.recommended,
     tseslint.configs.recommended,
     prettier,
@@ -13,11 +14,13 @@ export default tseslint.config(
             'gen/**',
             'dist/**',
             'coverage/**',
-            'prettier.config.js'
+            '**/*.js',
+            '**/*.mjs',
+            '**/*.cjs'
         ]
     },
     {
-        files: ['srv/**/*.ts'],
+        files: ['srv/**/*.ts', 'test/**/*.ts'],
         rules: {
             '@typescript-eslint/no-empty-function': 'off'
         }

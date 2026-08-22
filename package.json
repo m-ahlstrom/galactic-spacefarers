@@ -7,9 +7,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "format": "prettier --write \"srv/**/*.{js,ts}\"",
-    "lint": "eslint \"src/**/*.{js,ts}\" --quiet",
+    "format": "prettier --write \"{srv,db,test}/**/*.ts\"",
+    "lint": "eslint --quiet",
     "typecheck": "tsc --noEmit",
+    "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest"
   },
