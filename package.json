@@ -34,7 +34,31 @@
   "imports": {
     "#cds-models/*": "./@cds-models/*/index.js"
   },
-  "allowScripts": {
-    "esbuild@0.28.2": true
+  "cds": {
+    "requires": {
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "alice": {
+            "password": "alice",
+            "roles": ["MissionControl"],
+            "attr": { "planet": "*" }
+          },
+          "bob": {
+            "password": "bob",
+            "roles": ["Spacefarer"],
+            "attr": { "planet": "Earth" }
+          },
+          "zork": {
+            "password": "zork",
+            "roles": ["Spacefarer"],
+            "attr": { "planet": "Mars" }
+          }
+        },
+        "[production]": {
+          "kind": "xsuaa"
+        }
+      }
+    }
   }
 }

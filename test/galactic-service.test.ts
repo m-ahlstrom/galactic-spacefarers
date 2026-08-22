@@ -5,20 +5,26 @@ import { describe, expect, it } from 'vitest'
 const projectRoot = path.resolve(__dirname, '..')
 const { test } = cds.test(projectRoot)
 
+const missionControl = { auth: { username: 'alice', password: 'alice' } }
+
 describe('Spacefarers - CREATE', () => {
     it('creates a valid Spacefarer', async () => {
-        const response = await test.post('/odata/v4/galactic/Spacefarers', {
-            name: 'Test Spacefarer',
-            email: 'test@example.com',
-            age: 35,
-            stardustCollection: 500,
-            wormholeNavigationSkill: 80,
-            originPlanet: 'Mars',
-            destinationPlanet: 'Europa',
-            spacesuitColor: 'Blue',
-            department: 'Exploration',
-            position: 'Navigator',
-        })
+        const response = await test.post(
+            '/odata/v4/galactic/Spacefarers',
+            {
+                name: 'Test Spacefarer',
+                email: 'test@example.com',
+                age: 35,
+                stardustCollection: 500,
+                wormholeNavigationSkill: 80,
+                originPlanet: 'Mars',
+                destinationPlanet: 'Europa',
+                spacesuitColor: 'Blue',
+                department: 'Exploration',
+                position: 'Navigator',
+            },
+            missionControl,
+        )
 
         expect(response.status).to.equal(201)
 
@@ -40,16 +46,20 @@ describe('Spacefarers - CREATE', () => {
 
     it('rejects negative stardust collection', async () => {
         try {
-            await test.post('/odata/v4/galactic/Spacefarers', {
-                name: 'Negative Stardust',
-                email: 'negative.stardust@example.com',
-                age: 35,
-                stardustCollection: -100,
-                wormholeNavigationSkill: 80,
-                originPlanet: 'Mars',
-                destinationPlanet: 'Europa',
-            })
-            // If we get here, no error was thrown — force a failure
+            await test.post(
+                '/odata/v4/galactic/Spacefarers',
+                {
+                    name: 'Negative Stardust',
+                    email: 'negative.stardust@example.com',
+                    age: 35,
+                    stardustCollection: -100,
+                    wormholeNavigationSkill: 80,
+                    originPlanet: 'Mars',
+                    destinationPlanet: 'Europa',
+                },
+                missionControl,
+            )
+            // If we get here, force a failure
             expect.fail('Expected request to be rejected with 400')
         } catch (err: unknown) {
             if (err instanceof Error) {
