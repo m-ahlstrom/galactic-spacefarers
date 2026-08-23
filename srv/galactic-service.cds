@@ -7,6 +7,9 @@ service GalacticService {
         { grant: 'READ',
             to: 'Spacefarer',
             where: 'originPlanet = $user.planet' },
+        { grant: ['CREATE', 'UPDATE'],
+            to: 'Spacefarer',
+            where: 'owner = $user' },
         { grant: ['READ', 'CREATE', 'UPDATE', 'DELETE'],
             to: 'MissionControl' }
     ]

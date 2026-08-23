@@ -23,6 +23,8 @@ entity Spacefarers : cuid, managed {
     department                 : String(100);
 
     position                   : String(100);
+
+    owner                      : String(100) @cds.on.insert: $user; // login username this record belongs to
 }
 
 // ID, createdAt, createdBy, modifiedAt and modifiedBy automatically handled by CAP.

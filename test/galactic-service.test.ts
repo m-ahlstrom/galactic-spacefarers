@@ -39,6 +39,7 @@ describe('Spacefarers - CREATE', () => {
             spacesuitColor: 'Blue',
             department: 'Exploration',
             position: 'Navigator',
+            owner: 'alice',
         })
 
         expect(response.data.ID).to.be.a('string')
