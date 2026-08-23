@@ -1,22 +1,31 @@
-# Getting Started
+# Galactic Spacefarers
 
-Welcome to your new CAP project.
+A SAP CAP application for managing galactic spacefarers, built with SAP CAP, SQLite, OData V4, and SAP Fiori elements.
 
-It contains these folders and files, following our recommended project layout:
+The application provides a Fiori List Report and Object Page for managing spacefarers, together with validation, authentication/authorization, draft handling, and cosmic service event handlers with extensive testing.
 
-File or Folder | Purpose
----------|----------
-`app/` | content for UI frontends goes here
-`db/` | your domain models and data go here
-`srv/` | your service models and code go here
-`readme.md` | this getting started guide
+## How to use
 
-## Next Steps
+Clone the repository:
 
-- Open a new terminal and run `cds watch`
-- (in VS Code simply choose _**Terminal** > Run Task > cds watch_)
-- Start with your domain model, in a CDS file in `db/`
+`git clone https://github.com/m-ahlstrom/galactic-spacefarers.git`
 
-## Learn More
+Enter the project directory:
 
-Learn more at <https://cap.cloud.sap>.
+`cd galactic-spacefarers`
+
+Install the dependencies:
+
+`npm install`
+
+Run the application
+
+`cds watch`
+
+The CAP service is available at:
+
+`http://localhost:4004`
+
+To be able to access and edit every data, use `alice:alice` at sign in (admin called MissionControl). To check how simple users work, use `bob:bob` or `zork:zork`. A user can only see spacefarers from their origin planet and can only edit entries that was created by them. Users can't edit origin planet, age, department, position and wormhole navigation skill. An example `.csv` dataset is provided.
+
+To run the tests, use `npm test`.
