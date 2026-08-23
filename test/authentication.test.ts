@@ -22,7 +22,7 @@ describe('Spacefarers - Authentication', () => {
         })
 
         expect(response.status).to.equal(200)
-        expect(response.data.value.length).to.equal(2) // ! 2 Earth records in CSV dataset, needs adjustments, but works for now
+        expect(response.data.value.length).to.equal(38) // ! 38 Earth records in CSV dataset, needs adjustments, but works for now
         for (const record of response.data.value) {
             expect(record.originPlanet).to.equal('Earth')
         }
@@ -45,16 +45,37 @@ describe('Spacefarers - Authentication', () => {
         })
 
         expect(response.status).to.equal(200)
-        expect(response.data.value.length).to.equal(4) // ! full CSV dataset, needs adjustments, but works for now
+        expect(response.data.value.length).to.equal(111) // ! full CSV dataset, needs adjustments, but works for now
     })
 
     it('lets Bob edit his own record', async () => {
-        const response = await test.patch(
-            '/odata/v4/galactic/Spacefarers(11111111-1111-1111-1111-111111111111)',
-            { position: 'Fleet Admiral' },
-            { auth: { username: 'bob', password: 'bob' } },
+        const auth = { auth: { username: 'bob', password: 'bob' } }
+        const activeKey =
+            'ID=11111111-1111-1111-1111-111111111111,IsActiveEntity=true'
+        const draftKey =
+            'ID=11111111-1111-1111-1111-111111111111,IsActiveEntity=false'
+
+        const draftEdit = await test.post(
+            `/odata/v4/galactic/Spacefarers(${activeKey})/GalacticService.draftEdit`,
+            { PreserveChanges: true },
+            auth,
         )
-        expect(response.status).to.equal(200)
+        expect(draftEdit.status).to.equal(201)
+
+        const patched = await test.patch(
+            `/odata/v4/galactic/Spacefarers(${draftKey})`,
+            { destinationPlanet: 'Venus' },
+            auth,
+        )
+        expect(patched.status).to.equal(200)
+
+        const activated = await test.post(
+            `/odata/v4/galactic/Spacefarers(${draftKey})/GalacticService.draftActivate`,
+            {},
+            auth,
+        )
+        expect(activated.status).to.equal(200)
+        expect(activated.data.destinationPlanet).to.equal('Venus')
     })
 
     it("blocks Bob from editing someone else's record", async () => {

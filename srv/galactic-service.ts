@@ -12,6 +12,14 @@ const allowedPlanets = [
     'Ganymede',
 ]
 
+const missionControlOnlyFields = [
+    'originPlanet',
+    'age',
+    'department',
+    'position',
+    'wormholeNavigationSkill',
+] as const
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface SpacefarerPayload {
@@ -28,10 +36,10 @@ interface SpacefarerPayload {
 function validateSpacefarer(
     data: SpacefarerPayload,
     req: cds.Request,
-    isCreate: boolean,
+    checkRequired: boolean,
 ) {
     // Required-on-create checks only enforced when the record is being born
-    if (isCreate) {
+    if (checkRequired) {
         if (data.age === undefined || data.age === null) {
             req.error(400, 'Age is required.')
         }
@@ -124,23 +132,46 @@ function validateSpacefarer(
 
 export default class GalacticService extends cds.ApplicationService {
     async init(): Promise<void> {
-        this.before('CREATE', 'Spacefarers', async (req) => {
-            validateSpacefarer(req.data, req, true)
-
-            // Apply defaults — only relevant at creation time
-            if (!req.data.spacesuitColor) {
+        this.before('NEW', 'Spacefarers', async (req) => {
+            if (!req.data.spacesuitColor)
                 req.data.spacesuitColor = 'Cosmic Blue'
-            }
-            if (req.data.stardustCollection === undefined) {
+            if (req.data.stardustCollection === undefined)
                 req.data.stardustCollection = 0
-            }
-            if (req.data.wormholeNavigationSkill === undefined) {
+            if (req.data.wormholeNavigationSkill === undefined)
                 req.data.wormholeNavigationSkill = 1
-            }
         })
 
         this.before('UPDATE', 'Spacefarers', async (req) => {
             validateSpacefarer(req.data, req, false)
+        })
+
+        this.before('SAVE', 'Spacefarers', async (req) => {
+            validateSpacefarer(req.data, req, true)
+
+            if (!req.user.is('MissionControl')) {
+                const diff = await (
+                    req as unknown as {
+                        diff: () => Promise<Record<string, unknown>>
+                    }
+                ).diff()
+                const touched = missionControlOnlyFields.filter(
+                    (f) => diff[f] !== undefined,
+                )
+                if (touched.length) {
+                    req.error(
+                        403,
+                        `Only Mission Control may change: ${touched.join(', ')}`,
+                    )
+                }
+            }
+        })
+
+        this.after('READ', 'Spacefarers', (data, req) => {
+            const isMissionControl = req.user.is('MissionControl')
+            const rows = Array.isArray(data) ? data : [data]
+            rows.forEach((r) => {
+                if (r) r.restrictedFieldsReadOnly = !isMissionControl
+            })
         })
 
         this.after('CREATE', 'Spacefarers', async (data: Spacefarers, req) => {

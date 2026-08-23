@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "watch-galactic-spacefarers-app": "cds watch --open galacticspacefarersapp/index.html?sap-ui-xx-viewCache=false --livereload false"
   },
   "dependencies": {
     "@cap-js/sqlite": "^3.0.2",
@@ -29,7 +30,8 @@
     "tsx": "^4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "cds-plugin-ui5": "^0.17.0"
   },
   "imports": {
     "#cds-models/*": "./@cds-models/*/index.js"
@@ -41,18 +43,30 @@
         "users": {
           "alice": {
             "password": "alice",
-            "roles": ["MissionControl"],
-            "attr": { "planet": "*" }
+            "roles": [
+              "MissionControl"
+            ],
+            "attr": {
+              "planet": "*"
+            }
           },
           "bob": {
             "password": "bob",
-            "roles": ["Spacefarer"],
-            "attr": { "planet": "Earth" }
+            "roles": [
+              "Spacefarer"
+            ],
+            "attr": {
+              "planet": "Earth"
+            }
           },
           "zork": {
             "password": "zork",
-            "roles": ["Spacefarer"],
-            "attr": { "planet": "Mars" }
+            "roles": [
+              "Spacefarer"
+            ],
+            "attr": {
+              "planet": "Mars"
+            }
           }
         },
         "[production]": {
@@ -60,5 +74,11 @@
         }
       }
     }
-  }
+  },
+  "workspaces": [
+    "app/*"
+  ],
+  "sapux": [
+    "app/galactic-spacefarers-app"
+  ]
 }

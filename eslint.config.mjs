@@ -13,6 +13,7 @@ export default defineConfig(
             '@cds-models/**',
             'gen/**',
             'dist/**',
+            'app/**',
             'coverage/**',
             '**/*.js',
             '**/*.mjs',

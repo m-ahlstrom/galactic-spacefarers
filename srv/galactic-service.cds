@@ -15,3 +15,5 @@ service GalacticService {
     ]
     entity Spacefarers as projection on db.Spacefarers;
 }
+
+annotate GalacticService.Spacefarers with @odata.draft.enabled;

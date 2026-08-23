@@ -45,32 +45,37 @@ describe('Spacefarers - CREATE', () => {
         expect(response.data.ID).to.be.a('string')
     })
 
-    it('rejects negative stardust collection', async () => {
+    it('rejects negative stardust collection on save', async () => {
+        const draft = await test.post(
+            '/odata/v4/galactic/Spacefarers',
+            {
+                name: 'Negative Stardust',
+                email: 'negative.stardust@example.com',
+                age: 35,
+                stardustCollection: -100,
+                wormholeNavigationSkill: 80,
+                originPlanet: 'Mars',
+                destinationPlanet: 'Europa',
+            },
+            missionControl,
+        )
+        expect(draft.status).to.equal(201)
+
+        let didThrow = false
         try {
             await test.post(
-                '/odata/v4/galactic/Spacefarers',
-                {
-                    name: 'Negative Stardust',
-                    email: 'negative.stardust@example.com',
-                    age: 35,
-                    stardustCollection: -100,
-                    wormholeNavigationSkill: 80,
-                    originPlanet: 'Mars',
-                    destinationPlanet: 'Europa',
-                },
+                `/odata/v4/galactic/Spacefarers(ID=${draft.data.ID},IsActiveEntity=false)/GalacticService.draftActivate`,
+                {},
                 missionControl,
             )
-            // If we get here, force a failure
-            expect.fail('Expected request to be rejected with 400')
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                expect(err.message).to.include('400')
-                expect(err.message).to.include(
-                    'Stardust collection cannot be negative.',
-                )
-            } else {
-                expect.fail('Expected an Error instance')
-            }
+            didThrow = true
+            const message = err instanceof Error ? err.message : String(err)
+            expect(message).to.include('400')
+            expect(message).to.include(
+                'Stardust collection cannot be negative.',
+            )
         }
+        expect(didThrow, 'Expected activation to be rejected').to.equal(true)
     })
 })
