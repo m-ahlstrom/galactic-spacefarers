@@ -83,7 +83,10 @@ export default class GalacticService extends cds.ApplicationService {
             // Secret coffee protocol
 
             if (data.name === 'I need a coffee') {
-                req.error(418, "I'm a teapot. The Spacefarer needs coffee.")
+                req.error(
+                    418,
+                    "Mission Control, we have a problem. The Spacefarer needs coffee, but I'm a teapot.",
+                )
             }
 
             // Apply defaults
