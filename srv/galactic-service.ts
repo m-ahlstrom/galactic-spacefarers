@@ -1,5 +1,6 @@
 import cds from '@sap/cds'
-import validateSpacefarer from './lib/validateFunction'
+import validateSpacefarer from './lib/validate-function'
+import sendMockEmail from './lib/mock-mailer'
 
 const missionControlOnlyFields = [
     'originPlanet',
@@ -63,7 +64,8 @@ export default class GalacticService extends cds.ApplicationService {
                     `Stardust collected so far: ${req.data.stardustCollection}. Safe travels among the stars!`,
             }
 
-            console.log('Sending cosmic notification:', emailContent)
+            await sendMockEmail(emailContent)
+            req.notify(`Welcome email sent to ${req.data.email}`)
         })
 
         await super.init()
