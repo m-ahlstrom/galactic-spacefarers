@@ -20,7 +20,7 @@ mta_archives/
 
 @cds-models
 
-srv/*.js
-srv/*.js.map
+srv/**/*.js
+srv/**/*.js.map
 db/*.js
 db/*.js.map

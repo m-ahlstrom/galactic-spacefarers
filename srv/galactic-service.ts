@@ -1,5 +1,4 @@
 import cds from '@sap/cds'
-import { Spacefarers } from '#cds-models/GalacticService'
 import validateSpacefarer from './lib/validateFunction'
 
 const missionControlOnlyFields = [
@@ -54,7 +53,7 @@ export default class GalacticService extends cds.ApplicationService {
             })
         })
 
-        this.after('CREATE', 'Spacefarers', async (data: Spacefarers, req) => {
+        this.after('CREATE', 'Spacefarers', async (_data, req) => {
             const emailContent = {
                 to: req.data.email,
                 subject: `🚀 Welcome aboard, ${req.data.name}!`,
@@ -64,7 +63,6 @@ export default class GalacticService extends cds.ApplicationService {
                     `Stardust collected so far: ${req.data.stardustCollection}. Safe travels among the stars!`,
             }
 
-            // TODO Simulated send, swap to real mailer later
             console.log('Sending cosmic notification:', emailContent)
         })
 
