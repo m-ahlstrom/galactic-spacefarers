@@ -18,7 +18,7 @@ Install the dependencies:
 
 `npm install`
 
-Run the application
+Run the application:
 
 `cds watch`
 
