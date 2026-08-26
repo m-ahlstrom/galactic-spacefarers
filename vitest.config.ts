@@ -1,0 +1,15 @@
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+    test: {
+        include: ['test/**/*.test.ts'],
+        globals: true,
+        testTimeout: 30000,
+        fileParallelism: false,
+        server: {
+            deps: {
+                inline: ['@sap/cds', '@cap-js/cds-test'],
+            },
+        },
+    },
+})

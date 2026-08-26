@@ -2,21 +2,10 @@ import cds from '@sap/cds'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const allowedPlanets = [
-    'Mars',
-    'Earth',
-    'Venus',
-    'Moon',
-    'Europa',
-    'Enceladus',
-    'Titan',
-    'Ganymede',
-]
-
 interface SpacefarerPayload {
     age?: number
-    originPlanet?: string
-    destinationPlanet?: string
+    originPlanet_ID?: string
+    destinationPlanet_ID?: string
     stardustCollection?: number
     wormholeNavigationSkill?: number
     name?: string
@@ -29,15 +18,14 @@ export default function validateSpacefarer(
     req: cds.Request,
     checkRequired: boolean,
 ) {
-    // Required-on-create checks only enforced when the record is being born
     if (checkRequired) {
         if (data.age === undefined || data.age === null) {
             req.error(400, 'Age is required.')
         }
-        if (!data.originPlanet) {
+        if (!data.originPlanet_ID) {
             req.error(400, 'Origin planet is required.')
         }
-        if (!data.destinationPlanet) {
+        if (!data.destinationPlanet_ID) {
             req.error(400, 'Destination planet is required.')
         }
         if (!data.name) {
@@ -48,31 +36,9 @@ export default function validateSpacefarer(
         }
     }
 
-    // Range/format checks applied whenever the field is present, whether creating or editing
     if (data.age !== undefined && data.age !== null) {
         if (data.age < 25 || data.age > 55) {
             req.error(400, 'Spacefarers must be between 25 and 55 years old.')
-        }
-    }
-
-    if (data.originPlanet !== undefined && data.originPlanet !== null) {
-        if (!allowedPlanets.includes(data.originPlanet)) {
-            req.error(
-                400,
-                `Origin planet '${data.originPlanet}' is not an approved spacefaring world.`,
-            )
-        }
-    }
-
-    if (
-        data.destinationPlanet !== undefined &&
-        data.destinationPlanet !== null
-    ) {
-        if (!allowedPlanets.includes(data.destinationPlanet)) {
-            req.error(
-                400,
-                `Destination planet '${data.destinationPlanet}' is not an approved destination.`,
-            )
         }
     }
 

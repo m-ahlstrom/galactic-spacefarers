@@ -1,9 +1,12 @@
 import cds from '@sap/cds'
-import { describe, it, expect } from 'vitest'
 import path from 'node:path'
+import { describe, it, expect } from 'vitest'
+import { lookupId, lookupRecordId } from './helpers'
 
 const projectRoot = path.resolve(__dirname, '..')
 const { test } = cds.test(projectRoot)
+
+const missionControl = { auth: { username: 'alice', password: 'alice' } }
 
 describe('Spacefarers - Authentication', () => {
     it('rejects unauthenticated requests', async () => {
@@ -16,76 +19,114 @@ describe('Spacefarers - Authentication', () => {
         }
     })
 
-    it('only shows Bob (Earth) his own planet records', async () => {
-        const response = await test.get('/odata/v4/galactic/Spacefarers', {
-            auth: { username: 'bob', password: 'bob' },
-        })
+    it('only shows Bob (Earth) records with matching origin planet', async () => {
+        const groundTruth = await test.get(
+            `/odata/v4/galactic/Spacefarers?$filter=${encodeURIComponent("originPlanet/name eq 'Earth'")}&$count=true&$top=0`,
+            missionControl,
+        )
+        const expectedCount = groundTruth.data['@odata.count']
+
+        const response = await test.get(
+            '/odata/v4/galactic/Spacefarers?$expand=originPlanet',
+            { auth: { username: 'bob', password: 'bob' } },
+        )
 
         expect(response.status).to.equal(200)
-        expect(response.data.value.length).to.equal(38) // ! 38 Earth records in CSV dataset, needs adjustments, but works for now
+        expect(response.data.value.length).to.equal(expectedCount)
         for (const record of response.data.value) {
-            expect(record.originPlanet).to.equal('Earth')
+            expect(record.originPlanet.name).to.equal('Earth')
         }
     })
 
-    it('only shows Zork (Mars) his own planet records', async () => {
-        const response = await test.get('/odata/v4/galactic/Spacefarers', {
-            auth: { username: 'zork', password: 'zork' },
-        })
+    it('only shows Zork (Mars) records with matching origin planet', async () => {
+        const groundTruth = await test.get(
+            `/odata/v4/galactic/Spacefarers?$filter=${encodeURIComponent("originPlanet/name eq 'Mars'")}&$count=true&$top=0`,
+            missionControl,
+        )
+        const expectedCount = groundTruth.data['@odata.count']
+
+        const response = await test.get(
+            '/odata/v4/galactic/Spacefarers?$expand=originPlanet',
+            { auth: { username: 'zork', password: 'zork' } },
+        )
 
         expect(response.status).to.equal(200)
+        expect(response.data.value.length).to.equal(expectedCount)
         for (const record of response.data.value) {
-            expect(record.originPlanet).to.equal('Mars')
+            expect(record.originPlanet.name).to.equal('Mars')
         }
     })
 
-    it('lets MissionControl (Alice) see all planets', async () => {
-        const response = await test.get('/odata/v4/galactic/Spacefarers', {
-            auth: { username: 'alice', password: 'alice' },
-        })
+    it('lets MissionControl (Alice) see every record, unrestricted by planet', async () => {
+        const totalCount = await test.get(
+            '/odata/v4/galactic/Spacefarers?$count=true&$top=0',
+            missionControl,
+        )
+        const response = await test.get(
+            '/odata/v4/galactic/Spacefarers',
+            missionControl,
+        )
 
         expect(response.status).to.equal(200)
-        expect(response.data.value.length).to.equal(111) // ! full CSV dataset, needs adjustments, but works for now
+        expect(response.data.value.length).to.equal(
+            totalCount.data['@odata.count'],
+        )
     })
 
     it('lets Bob edit his own record', async () => {
-        const auth = { auth: { username: 'bob', password: 'bob' } }
-        const activeKey =
-            'ID=11111111-1111-1111-1111-111111111111,IsActiveEntity=true'
-        const draftKey =
-            'ID=11111111-1111-1111-1111-111111111111,IsActiveEntity=false'
+        const bobAuth = { auth: { username: 'bob', password: 'bob' } }
+        const bobRecordId = await lookupRecordId(
+            test,
+            "owner eq 'bob'",
+            missionControl,
+        )
+        const venusId = await lookupId(
+            test,
+            'Planets',
+            "name eq 'Venus'",
+            missionControl,
+        )
+
+        const activeKey = `ID=${bobRecordId},IsActiveEntity=true`
+        const draftKey = `ID=${bobRecordId},IsActiveEntity=false`
 
         const draftEdit = await test.post(
             `/odata/v4/galactic/Spacefarers(${activeKey})/GalacticService.draftEdit`,
             { PreserveChanges: true },
-            auth,
+            bobAuth,
         )
         expect(draftEdit.status).to.equal(201)
 
         const patched = await test.patch(
             `/odata/v4/galactic/Spacefarers(${draftKey})`,
-            { destinationPlanet: 'Venus' },
-            auth,
+            { destinationPlanet_ID: venusId },
+            bobAuth,
         )
         expect(patched.status).to.equal(200)
 
         const activated = await test.post(
             `/odata/v4/galactic/Spacefarers(${draftKey})/GalacticService.draftActivate`,
             {},
-            auth,
+            bobAuth,
         )
         expect(activated.status).to.equal(200)
-        expect(activated.data.destinationPlanet).to.equal('Venus')
+        expect(activated.data.destinationPlanet_ID).to.equal(venusId)
     })
 
     it("blocks Bob from editing someone else's record", async () => {
+        const zorkRecordId = await lookupRecordId(
+            test,
+            "owner eq 'zork'",
+            missionControl,
+        )
+
         try {
-            await test.patch(
-                '/odata/v4/galactic/Spacefarers(22222222-2222-2222-2222-222222222222)',
-                { position: 'Hijacked' },
+            await test.post(
+                `/odata/v4/galactic/Spacefarers(ID=${zorkRecordId},IsActiveEntity=true)/GalacticService.draftEdit`,
+                { PreserveChanges: true },
                 { auth: { username: 'bob', password: 'bob' } },
             )
-            expect.fail('Expected update to be rejected')
+            expect.fail('Expected draftEdit to be rejected')
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err)
             expect(message).to.include('403')
@@ -93,36 +134,76 @@ describe('Spacefarers - Authentication', () => {
     })
 
     it('lets a Spacefarer self-create a record, owned by themself', async () => {
-        const response = await test.post(
+        const bobAuth = { auth: { username: 'bob', password: 'bob' } }
+        const earthId = await lookupId(
+            test,
+            'Planets',
+            "name eq 'Earth'",
+            bobAuth,
+        )
+        const marsId = await lookupId(
+            test,
+            'Planets',
+            "name eq 'Mars'",
+            bobAuth,
+        )
+
+        const draft = await test.post(
             '/odata/v4/galactic/Spacefarers',
             {
                 name: 'New Recruit',
                 email: 'newrecruit@earth.test',
                 age: 30,
-                originPlanet: 'Earth',
-                destinationPlanet: 'Mars',
+                originPlanet_ID: earthId,
+                destinationPlanet_ID: marsId,
             },
-            { auth: { username: 'bob', password: 'bob' } },
+            bobAuth,
         )
+        expect(draft.status).to.equal(201)
 
+        const response = await test.post(
+            `/odata/v4/galactic/Spacefarers(ID=${draft.data.ID},IsActiveEntity=false)/GalacticService.draftActivate`,
+            {},
+            bobAuth,
+        )
         expect(response.status).to.equal(201)
         expect(response.data.owner).to.equal('bob')
     })
 
     it('ignores a client-supplied owner and forces it to the authenticated user', async () => {
-        const response = await test.post(
+        const bobAuth = { auth: { username: 'bob', password: 'bob' } }
+        const earthId = await lookupId(
+            test,
+            'Planets',
+            "name eq 'Earth'",
+            bobAuth,
+        )
+        const marsId = await lookupId(
+            test,
+            'Planets',
+            "name eq 'Mars'",
+            bobAuth,
+        )
+
+        const draft = await test.post(
             '/odata/v4/galactic/Spacefarers',
             {
                 name: 'Sneaky Recruit',
                 email: 'sneaky@earth.test',
                 age: 30,
-                originPlanet: 'Earth',
-                destinationPlanet: 'Mars',
+                originPlanet_ID: earthId,
+                destinationPlanet_ID: marsId,
                 owner: 'zork', // attempting to spoof ownership
             },
-            { auth: { username: 'bob', password: 'bob' } },
+            bobAuth,
         )
+        expect(draft.status).to.equal(201)
 
+        const response = await test.post(
+            `/odata/v4/galactic/Spacefarers(ID=${draft.data.ID},IsActiveEntity=false)/GalacticService.draftActivate`,
+            {},
+            bobAuth,
+        )
         expect(response.status).to.equal(201)
         expect(response.data.owner).to.equal('bob') // not 'zork'
     })
