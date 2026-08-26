@@ -8,12 +8,15 @@
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"{srv,db,test}/**/*.ts\"",
+    "format:check": "prettier --check \"{srv,db,test}/**/*.ts\"",
     "lint": "eslint --quiet",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "watch-galactic-spacefarers-app": "cds watch --open galacticspacefarersapp/index.html?sap-ui-xx-viewCache=false --livereload false"
+    "watch-galactic-spacefarers-app": "cds watch --open galacticspacefarersapp/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "prepare": "husky",
+    "check": "npm run typecheck && npm run format:check && npm run lint && npm run test"
   },
   "dependencies": {
     "@cap-js/sqlite": "^3.0.2",
@@ -24,14 +27,15 @@
     "@cap-js/cds-typer": ">=0.1",
     "@cap-js/cds-types": "^0.18.0",
     "@types/node": "^24.0.0",
+    "cds-plugin-ui5": "^0.17.0",
     "eslint": "^10.9.0",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "prettier": "^3.9.6",
     "tsx": "^4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.11",
-    "cds-plugin-ui5": "^0.17.0"
+    "vitest": "^4.1.11"
   },
   "imports": {
     "#cds-models/*": "./@cds-models/*/index.js"
