@@ -24,3 +24,5 @@ srv/**/*.js
 srv/**/*.js.map
 db/*.js
 db/*.js.map
+
+.env

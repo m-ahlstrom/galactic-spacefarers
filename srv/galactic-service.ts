@@ -2,7 +2,8 @@ import cds from '@sap/cds'
 import validateSpacefarer from './lib/validate-function'
 import validatePlanetAccess from './lib/validate-planet-access'
 import validateSpacesuitColor from './lib/validate-spacesuit-color'
-import sendMockEmail from './lib/mock-mailer'
+import sendMail from './lib/send-mail'
+import buildWelcomeEmailHtml from './lib/email-template'
 
 const missionControlOnlyFields = [
     'originPlanet_ID',
@@ -15,8 +16,6 @@ const missionControlOnlyFields = [
 export default class GalacticService extends cds.ApplicationService {
     async init(): Promise<void> {
         this.before('NEW', 'Spacefarers', async (req) => {
-            if (!req.data.spacesuitColor)
-                req.data.spacesuitColor = 'Cosmic Blue'
             if (req.data.stardustCollection === undefined)
                 req.data.stardustCollection = 0
             if (req.data.wormholeNavigationSkill === undefined)
@@ -69,26 +68,57 @@ export default class GalacticService extends cds.ApplicationService {
         })
 
         this.after('CREATE', 'Spacefarers', async (_data, req) => {
-            const { Planets } = cds.entities('galactic.spacefarer')
+            const { Planets, Departments, Positions, SpacesuitColors } =
+                cds.entities('galactic.spacefarer')
 
-            const [origin, destination] = await Promise.all([
-                SELECT.one
-                    .from(Planets)
-                    .where({ ID: req.data.originPlanet_ID }),
-                SELECT.one
-                    .from(Planets)
-                    .where({ ID: req.data.destinationPlanet_ID }),
-            ])
+            const [origin, destination, department, position, spacesuitColor] =
+                await Promise.all([
+                    SELECT.one
+                        .from(Planets)
+                        .where({ ID: req.data.originPlanet_ID }),
 
-            const emailContent = {
+                    SELECT.one
+                        .from(Planets)
+                        .where({ ID: req.data.destinationPlanet_ID }),
+
+                    req.data.department_ID
+                        ? SELECT.one
+                              .from(Departments)
+                              .where({ ID: req.data.department_ID })
+                        : Promise.resolve(null),
+
+                    req.data.position_ID
+                        ? SELECT.one
+                              .from(Positions)
+                              .where({ ID: req.data.position_ID })
+                        : Promise.resolve(null),
+
+                    req.data.spacesuitColor_ID
+                        ? SELECT.one
+                              .from(SpacesuitColors)
+                              .where({ ID: req.data.spacesuitColor_ID })
+                        : Promise.resolve(null),
+                ])
+
+            const html = buildWelcomeEmailHtml({
+                name: req.data.name,
+                email: req.data.email,
+                age: req.data.age,
+                originPlanetName: origin?.name ?? 'an unknown world',
+                destinationPlanetName: destination?.name ?? 'parts unknown',
+                departmentName: department?.name ?? 'Unassigned',
+                positionTitle: position?.title ?? 'Unassigned',
+                stardustCollection: req.data.stardustCollection ?? 0,
+                wormholeNavigationSkill: req.data.wormholeNavigationSkill ?? 1,
+                spacesuitColor: spacesuitColor?.name ?? 'Cosmic Blue',
+            })
+
+            await sendMail({
                 to: req.data.email,
                 subject: `🚀 Welcome aboard, ${req.data.name}!`,
-                body:
-                    `Congratulations, ${req.data.name}! Your cosmic journey from ${origin?.name ?? 'an unknown world'} ` +
-                    `to ${destination?.name ?? 'parts unknown'} has been cleared for launch. ` +
-                    `Stardust collected so far: ${req.data.stardustCollection}. Safe travels among the stars!`,
-            }
-            await sendMockEmail(emailContent)
+                html,
+            })
+
             req.notify(`Welcome email sent to ${req.data.email}`)
         })
 
