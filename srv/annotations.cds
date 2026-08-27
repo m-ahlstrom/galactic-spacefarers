@@ -244,7 +244,7 @@ annotate service.Positions with @UI.PresentationVariant: {SortOrder: [{
 
 annotate service.Positions with {
     displayTitle @title: 'Position (Department)';
-    ID @UI.Hidden;
+    ID           @UI.Hidden;
 };
 
 annotate service.Planets with {
