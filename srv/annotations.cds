@@ -46,7 +46,7 @@ annotate service.Spacefarers with @(UI: {
     SelectionFields       : [
         originPlanet_ID,
         destinationPlanet_ID,
-        spacesuitColor,
+        spacesuitColor_ID,
         department_ID,
         position_ID
     ],
@@ -113,8 +113,9 @@ annotate service.Spacefarers with @(UI: {
             Label: 'Wormhole Navigation Skill (1–100)'
         },
         {
-            Value: spacesuitColor,
-            Label: 'Spacesuit Color (e.g. Cosmic Blue)'
+            $Type: 'UI.DataField',
+            Value: spacesuitColor_ID,
+            Label: 'Spacesuit Color'
         }
     ]}
 });
@@ -184,14 +185,12 @@ annotate service.Spacefarers with {
             }
         ]
     };
-};
 
-annotate service.Spacefarers with {
-    position @Common.Text                    : position.displayTitle
-             @Common.TextArrangement         : #TextOnly
-             @Common.Label                   : 'Position'
-             @Common.ValueListWithFixedValues: true
-             @Common.ValueList               : {
+    position          @Common.Text                    : position.displayTitle
+                      @Common.TextArrangement         : #TextOnly
+                      @Common.Label                   : 'Position'
+                      @Common.ValueListWithFixedValues: true
+                      @Common.ValueList               : {
         Label         : 'Position',
         CollectionPath: 'Positions',
         Parameters    : [
@@ -203,6 +202,31 @@ annotate service.Spacefarers with {
             {
                 $Type            : 'Common.ValueListParameterDisplayOnly',
                 ValueListProperty: 'displayTitle'
+            },
+            {
+                $Type            : 'Common.ValueListParameterIn',
+                LocalDataProperty: department_ID,
+                ValueListProperty: 'department_ID'
+            }
+        ]
+    };
+
+    spacesuitColor    @Common.Text                    : spacesuitColor.name
+                      @Common.TextArrangement         : #TextOnly
+                      @Common.Label                   : 'Spacesuit Color'
+                      @Common.ValueListWithFixedValues: true
+                      @Common.ValueList               : {
+        Label         : 'Spacesuit Color',
+        CollectionPath: 'AvailableSpacesuitColors',
+        Parameters    : [
+            {
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: spacesuitColor_ID,
+                ValueListProperty: 'ID'
+            },
+            {
+                $Type            : 'Common.ValueListParameterDisplayOnly',
+                ValueListProperty: 'name'
             },
             {
                 $Type            : 'Common.ValueListParameterIn',
@@ -226,6 +250,14 @@ annotate service.Departments with {
 };
 
 annotate service.Positions with {
+    ID @UI.Hidden;
+};
+
+annotate service.SpacesuitColors with {
+    ID @UI.Hidden;
+};
+
+annotate service.AvailableSpacesuitColors with {
     ID @UI.Hidden;
 };
 

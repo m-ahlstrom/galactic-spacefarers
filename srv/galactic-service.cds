@@ -26,16 +26,36 @@ service GalacticService {
             to   : 'MissionControl'
         }
     ]
-    entity Spacefarers as projection on db.Spacefarers;
+    entity Spacefarers              as
+        projection on db.Spacefarers {
+            *,
+            spacesuitColor,
+            department,
+            originPlanet,
+            destinationPlanet,
+            position
+        };
 
     @readonly
-    entity Planets     as projection on db.Planets;
+    entity Planets                  as projection on db.Planets;
 
     @readonly
-    entity Departments as projection on db.Departments;
+    entity SpacesuitColors          as projection on db.SpacesuitColors;
 
     @readonly
-    entity Positions   as
+    entity AvailableSpacesuitColors as
+        projection on db.DepartmentColorAccess {
+            key color.ID      as ID,
+                color.name    as name,
+                department.ID as department_ID,
+                minRank
+        };
+
+    @readonly
+    entity Departments              as projection on db.Departments;
+
+    @readonly
+    entity Positions                as
         projection on db.Positions {
             *,
             title || ' (' || department.name || ')' as displayTitle : String(150)

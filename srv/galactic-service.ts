@@ -1,6 +1,7 @@
 import cds from '@sap/cds'
 import validateSpacefarer from './lib/validate-function'
 import validatePlanetAccess from './lib/validate-planet-access'
+import validateSpacesuitColor from './lib/validate-spacesuit-color'
 import sendMockEmail from './lib/mock-mailer'
 
 const missionControlOnlyFields = [
@@ -25,11 +26,13 @@ export default class GalacticService extends cds.ApplicationService {
         this.before('UPDATE', 'Spacefarers', async (req) => {
             validateSpacefarer(req.data, req, false)
             await validatePlanetAccess(req.data, req)
+            await validateSpacesuitColor(req.data, req)
         })
 
         this.before('SAVE', 'Spacefarers', async (req) => {
             validateSpacefarer(req.data, req, true)
             await validatePlanetAccess(req.data, req)
+            await validateSpacesuitColor(req.data, req)
 
             if (!req.user.is('MissionControl')) {
                 const { Spacefarers } = cds.entities('galactic.spacefarer')

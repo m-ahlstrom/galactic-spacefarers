@@ -1,12 +1,17 @@
 import cds from '@sap/cds'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { lookupId } from './helpers'
+import { lookupId, type Auth } from './helpers'
 
 const projectRoot = path.resolve(__dirname, '..')
 const { test } = cds.test(projectRoot)
 
-const missionControl = { auth: { username: 'alice', password: 'alice' } }
+const missionControl: Auth = {
+    auth: {
+        username: 'alice',
+        password: 'alice',
+    },
+}
 
 describe('Spacefarers - CREATE', () => {
     it('creates a valid Spacefarer', async () => {
@@ -16,18 +21,28 @@ describe('Spacefarers - CREATE', () => {
             "name eq 'Mars'",
             missionControl,
         )
+
         const europaId = await lookupId(
             test,
             'Planets',
             "name eq 'Europa'",
             missionControl,
         )
+
         const explorationId = await lookupId(
             test,
             'Departments',
             "name eq 'Exploration'",
             missionControl,
         )
+
+        const crimsonId = await lookupId(
+            test,
+            'SpacesuitColors',
+            "name eq 'Crimson'",
+            missionControl,
+        )
+
         const cadetId = await lookupId(
             test,
             'Positions',
@@ -45,12 +60,13 @@ describe('Spacefarers - CREATE', () => {
                 wormholeNavigationSkill: 80,
                 originPlanet_ID: marsId,
                 destinationPlanet_ID: europaId,
-                spacesuitColor: 'Blue',
+                spacesuitColor_ID: crimsonId,
                 department_ID: explorationId,
                 position_ID: cadetId,
             },
             missionControl,
         )
+
         expect(draft.status).to.equal(201)
         expect(draft.data.IsActiveEntity).to.equal(false)
 
@@ -59,28 +75,43 @@ describe('Spacefarers - CREATE', () => {
             {},
             missionControl,
         )
+
         expect(response.status).to.equal(201)
         expect(response.data.ID).to.be.a('string')
 
-        // Verify via $expand, so assertions read by name
-
         const expanded = await test.get(
             `/odata/v4/galactic/Spacefarers(ID=${response.data.ID},IsActiveEntity=true)` +
-                `?$expand=originPlanet,destinationPlanet,department,position`,
+                `?$expand=originPlanet,destinationPlanet,department,position,spacesuitColor`,
             missionControl,
         )
+
         expect(expanded.data).to.containSubset({
             name: 'Test Spacefarer',
             email: 'test@example.com',
             age: 35,
             stardustCollection: 500,
             wormholeNavigationSkill: 80,
-            spacesuitColor: 'Blue',
             owner: 'alice',
-            originPlanet: { name: 'Mars' },
-            destinationPlanet: { name: 'Europa' },
-            department: { name: 'Exploration' },
-            position: { title: 'Cadet' },
+
+            originPlanet: {
+                name: 'Mars',
+            },
+
+            destinationPlanet: {
+                name: 'Europa',
+            },
+
+            department: {
+                name: 'Exploration',
+            },
+
+            position: {
+                title: 'Cadet',
+            },
+
+            spacesuitColor: {
+                name: 'Crimson',
+            },
         })
     })
 
@@ -91,10 +122,25 @@ describe('Spacefarers - CREATE', () => {
             "name eq 'Mars'",
             missionControl,
         )
+
         const europaId = await lookupId(
             test,
             'Planets',
             "name eq 'Europa'",
+            missionControl,
+        )
+
+        const explorationId = await lookupId(
+            test,
+            'Departments',
+            "name eq 'Exploration'",
+            missionControl,
+        )
+
+        const crimsonId = await lookupId(
+            test,
+            'SpacesuitColors',
+            "name eq 'Crimson'",
             missionControl,
         )
 
@@ -108,12 +154,16 @@ describe('Spacefarers - CREATE', () => {
                 wormholeNavigationSkill: 80,
                 originPlanet_ID: marsId,
                 destinationPlanet_ID: europaId,
+                department_ID: explorationId,
+                spacesuitColor_ID: crimsonId,
             },
             missionControl,
         )
+
         expect(draft.status).to.equal(201)
 
         let didThrow = false
+
         try {
             await test.post(
                 `/odata/v4/galactic/Spacefarers(ID=${draft.data.ID},IsActiveEntity=false)/GalacticService.draftActivate`,
@@ -122,12 +172,15 @@ describe('Spacefarers - CREATE', () => {
             )
         } catch (err: unknown) {
             didThrow = true
+
             const message = err instanceof Error ? err.message : String(err)
+
             expect(message).to.include('400')
             expect(message).to.include(
                 'Stardust collection cannot be negative.',
             )
         }
+
         expect(didThrow, 'Expected activation to be rejected').to.equal(true)
     })
 
@@ -138,16 +191,25 @@ describe('Spacefarers - CREATE', () => {
             "name eq 'Mars'",
             missionControl,
         )
+
         const enceladusId = await lookupId(
             test,
             'Planets',
             "name eq 'Enceladus'",
             missionControl,
         )
+
         const navigationId = await lookupId(
             test,
             'Departments',
             "name eq 'Navigation'",
+            missionControl,
+        )
+
+        const ivoryWhiteId = await lookupId(
+            test,
+            'SpacesuitColors',
+            "name eq 'Ivory White'",
             missionControl,
         )
 
@@ -160,12 +222,15 @@ describe('Spacefarers - CREATE', () => {
                 originPlanet_ID: marsId,
                 destinationPlanet_ID: enceladusId,
                 department_ID: navigationId,
+                spacesuitColor_ID: ivoryWhiteId,
             },
             missionControl,
         )
+
         expect(draft.status).to.equal(201)
 
         let didThrow = false
+
         try {
             await test.post(
                 `/odata/v4/galactic/Spacefarers(ID=${draft.data.ID},IsActiveEntity=false)/GalacticService.draftActivate`,
@@ -174,10 +239,13 @@ describe('Spacefarers - CREATE', () => {
             )
         } catch (err: unknown) {
             didThrow = true
+
             const message = err instanceof Error ? err.message : String(err)
+
             expect(message).to.include('403')
             expect(message).to.include('not cleared for travel')
         }
+
         expect(didThrow, 'Expected activation to be rejected').to.equal(true)
     })
 
@@ -188,16 +256,25 @@ describe('Spacefarers - CREATE', () => {
             "name eq 'Mars'",
             missionControl,
         )
+
         const enceladusId = await lookupId(
             test,
             'Planets',
             "name eq 'Enceladus'",
             missionControl,
         )
+
         const scienceId = await lookupId(
             test,
             'Departments',
             "name eq 'Science'",
+            missionControl,
+        )
+
+        const cosmicBlueId = await lookupId(
+            test,
+            'SpacesuitColors',
+            "name eq 'Cosmic Blue'",
             missionControl,
         )
 
@@ -210,9 +287,11 @@ describe('Spacefarers - CREATE', () => {
                 originPlanet_ID: marsId,
                 destinationPlanet_ID: enceladusId,
                 department_ID: scienceId,
+                spacesuitColor_ID: cosmicBlueId,
             },
             missionControl,
         )
+
         expect(draft.status).to.equal(201)
 
         const response = await test.post(
@@ -220,12 +299,17 @@ describe('Spacefarers - CREATE', () => {
             {},
             missionControl,
         )
+
         expect(response.status).to.equal(201)
 
         const expanded = await test.get(
-            `/odata/v4/galactic/Spacefarers(ID=${response.data.ID},IsActiveEntity=true)?$expand=destinationPlanet`,
+            `/odata/v4/galactic/Spacefarers(ID=${response.data.ID},IsActiveEntity=true)` +
+                `?$expand=destinationPlanet,department,spacesuitColor`,
             missionControl,
         )
+
         expect(expanded.data.destinationPlanet.name).to.equal('Enceladus')
+        expect(expanded.data.department.name).to.equal('Science')
+        expect(expanded.data.spacesuitColor.name).to.equal('Cosmic Blue')
     })
 })

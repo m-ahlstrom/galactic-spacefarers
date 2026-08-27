@@ -1,4 +1,9 @@
-type Auth = { auth: { username: string; password: string } }
+export type Auth = {
+    auth: {
+        username: string
+        password: string
+    }
+}
 
 interface ODataCollectionResponse {
     data: {
@@ -12,7 +17,7 @@ interface TestClient {
 
 export async function lookupId(
     test: TestClient,
-    entitySet: 'Planets' | 'Departments' | 'Positions',
+    entitySet: 'Planets' | 'Departments' | 'Positions' | 'SpacesuitColors',
     filter: string,
     auth: Auth,
 ): Promise<string> {
@@ -20,9 +25,11 @@ export async function lookupId(
         `/odata/v4/galactic/${entitySet}?$filter=${encodeURIComponent(filter)}&$top=1`,
         auth,
     )
+
     if (!response.data.value.length) {
         throw new Error(`No ${entitySet} found matching filter: ${filter}`)
     }
+
     return response.data.value[0].ID as string
 }
 
@@ -35,8 +42,10 @@ export async function lookupRecordId(
         `/odata/v4/galactic/Spacefarers?$filter=${encodeURIComponent(filter)}&$top=1`,
         auth,
     )
+
     if (!response.data.value.length) {
         throw new Error(`No Spacefarer found matching filter: ${filter}`)
     }
+
     return response.data.value[0].ID as string
 }

@@ -10,7 +10,7 @@ interface SpacefarerPayload {
     wormholeNavigationSkill?: number
     name?: string
     email?: string
-    spacesuitColor?: string
+    spacesuitColor_ID?: string
 }
 
 export default function validateSpacefarer(
@@ -33,6 +33,9 @@ export default function validateSpacefarer(
         }
         if (!data.email) {
             req.error(400, 'Email is required.')
+        }
+        if (!data.spacesuitColor_ID) {
+            req.error(400, 'Spacesuit color is required.')
         }
     }
 
