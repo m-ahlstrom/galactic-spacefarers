@@ -237,8 +237,14 @@ annotate service.Spacefarers with {
     };
 };
 
+annotate service.Positions with @UI.PresentationVariant: {SortOrder: [{
+    Property  : rank,
+    Descending: false
+}]};
+
 annotate service.Positions with {
     displayTitle @title: 'Position (Department)';
+    ID @UI.Hidden;
 };
 
 annotate service.Planets with {
@@ -246,10 +252,6 @@ annotate service.Planets with {
 };
 
 annotate service.Departments with {
-    ID @UI.Hidden;
-};
-
-annotate service.Positions with {
     ID @UI.Hidden;
 };
 
